@@ -1,5 +1,6 @@
 import pygame
 import random
+import os
 
 # Initialize Pygame
 pygame.init()
@@ -12,6 +13,11 @@ BALL_RADIUS = 10
 BALL_SPEED = 5
 PADDLE_SPEED = 7
 GAME_FONT = pygame.font.Font(None, 36)
+
+# Load sound effects
+pygame.mixer.init()
+hit_sound = pygame.mixer.Sound("./Sound Effects/metal-hit-5-193273.mp3")
+game_over_sound = pygame.mixer.Sound("./Sound Effects/game-over-arcade-6435.mp3")
 
 # Create the screen
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -56,6 +62,7 @@ class Ball(pygame.sprite.Sprite):
             self.speed_y *= -1
         if pygame.sprite.collide_mask(ball, player_paddle) or pygame.sprite.collide_mask(ball, ai_paddle):
             self.speed_x *= -1
+            hit_sound.play()
 
 # Create sprites
 player_paddle = Paddle(50, HEIGHT // 2)
@@ -65,13 +72,23 @@ ball = Ball()
 all_sprites = pygame.sprite.Group()
 all_sprites.add(player_paddle, ai_paddle, ball)
 
+# Score variables
+player_score = 0
+ai_score = 0
+
 # Game over notification
 def show_game_over(winner):
+    game_over_sound.play()
     text = GAME_FONT.render(f"Game Over! {winner} wins!", True, WHITE)
     text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
     screen.blit(text, text_rect)
 
-    restart_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 50, 200, 50)
+    # Display scores
+    score_text = GAME_FONT.render(f"Player: {player_score}  AI: {ai_score}", True, WHITE)
+    score_rect = score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 50))
+    screen.blit(score_text, score_rect)
+
+    restart_button = pygame.Rect(WIDTH // 2 - 100, HEIGHT // 2 + 100, 200, 50)
     pygame.draw.rect(screen, WHITE, restart_button)
     restart_text = GAME_FONT.render("Restart", True, BLACK)
     restart_text_rect = restart_text.get_rect(center=restart_button.center)
@@ -110,7 +127,7 @@ while running:
         if keys[pygame.K_DOWN]:
             player_paddle.move_down()
 
-        # AI paddle movement
+        # AI paddle movement with simple predictive behavior
         if ball.rect.centery < ai_paddle.rect.centery:
             ai_paddle.move_up()
         elif ball.rect.centery > ai_paddle.rect.centery:
@@ -122,9 +139,11 @@ while running:
         # Ball misses the paddle
         if ball.rect.right < 0:
             game_over = True
+            ai_score += 1
             winner = "AI"
         elif ball.rect.left > WIDTH:
             game_over = True
+            player_score += 1
             winner = "Player"
 
         # Draw
@@ -132,10 +151,16 @@ while running:
         pygame.draw.line(screen, WHITE, (WIDTH // 2, 0), (WIDTH // 2, HEIGHT), 2)
         all_sprites.draw(screen)
 
+        # Display scores during gameplay
+        score_text = GAME_FONT.render(f"Player: {player_score}  AI: {ai_score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
         pygame.display.flip()
         clock.tick(60)
 
     if show_game_over(winner):
+        player_score = 0
+        ai_score = 0
         continue
 
 pygame.quit()
