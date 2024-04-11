@@ -26,4 +26,7 @@ Paddle Clash offers a dynamic gameplay experience where players control paddles 
 ## Contribution
 Contributions are welcome! If you have any suggestions, bug reports, or feature requests, feel free to open an issue or submit a pull request.
 
+## License
+This project is licensed under the terms of the MIT license. See the [LICENSE](LICENSE) file for details.
+
 Let the clash begin! 💥🎮
